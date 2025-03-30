@@ -182,34 +182,41 @@ namespace IniFile
             IniSection section = null;
 
             string line;
-            while ((line = reader.ReadLine()) != null)
+            while ((line = reader.ReadLine()) is not null)
             {
                 line = line.Trim();
 
                 // skip empty lines
                 if (line == string.Empty)
+                {
                     continue;
+                }
 
                 // skip comments
                 if (line.StartsWith(";") || line.StartsWith("#"))
+                {
                     continue;
+                }
 
                 if (line.StartsWith("[") && line.EndsWith("]"))
                 {
                     var sectionName = line.Substring(1, line.Length - 2);
-                    if (!_sections.ContainsKey(sectionName))
+                    if (_sections.ContainsKey(sectionName) == false)
                     {
                         section = new IniSection(sectionName);
                         _sections.Add(sectionName, section);
                     }
+
                     continue;
                 }
 
-                if (section != null)
+                if (section is not null)
                 {
                     var keyValue = line.Split(new[] { "=" }, 2, StringSplitOptions.RemoveEmptyEntries);
                     if (keyValue.Length != 2)
+                    {
                         continue;
+                    }
 
                     section.Set(keyValue[0].Trim(), keyValue[1].Trim());
                 }
@@ -224,7 +231,7 @@ namespace IniFile
         public IniSection Section(string sectionName)
         {
             IniSection section;
-            if (!_sections.TryGetValue(sectionName, out section))
+            if (_sections.TryGetValue(sectionName, out section) == false)
             {
                 section = new IniSection(sectionName);
                 _sections.Add(sectionName, section);
@@ -249,8 +256,8 @@ namespace IniFile
         /// <param name="path">Path to the INI file to create.</param>
         public void Save(string path)
         {
-            using (var file = new StreamWriter(path))
-                Save(file);
+            using var file = new StreamWriter(path);
+            Save(file);
         }
 
         /// <summary>
@@ -262,10 +269,14 @@ namespace IniFile
             foreach (var section in _sections.Values)
             {
                 if (section.Properties.Length == 0)
+                {
                     continue;
+                }
 
-                if (section.Comment != null)
+                if (string.IsNullOrWhiteSpace(section.Comment) == false)
+                {
                     writer.WriteLine($"{CommentChar} {section.Comment}");
+                }
 
                 writer.WriteLine($"[{section.Name}]");
 
@@ -288,11 +299,9 @@ namespace IniFile
         /// <returns>The text content of this INI file.</returns>
         public override string ToString()
         {
-            using (var sw = new StringWriter())
-            {
-                Save(sw);
-                return sw.ToString();
-            }
+            using var sw = new StringWriter();
+            Save(sw);
+            return sw.ToString();
         }
     }
 }
